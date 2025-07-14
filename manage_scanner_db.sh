@@ -29,8 +29,7 @@ JAVA_DB_DIR=""
 TRIVY_DB_REPO="ghcr.m.daocloud.io/aquasecurity/trivy-db"
 TRIVY_JAVA_DB_REPO="ghcr.m.daocloud.io/aquasecurity/trivy-java-db"
 
-
-# --- 日志函数 (无改动) ---
+# --- 日志函数 ---
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -47,7 +46,7 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# --- 帮助信息 (已更新) ---
+# --- 帮助信息 ---
 show_help() {
     cat << EOF
 扫描器数据库管理脚本 (Trivy & Grype)
@@ -80,7 +79,7 @@ show_help() {
 EOF
 }
 
-# --- 泛化后的核心函数 ---
+# --- 核心函数 ---
 
 # 检查工具是否安装
 check_tool_installed() {
@@ -99,7 +98,7 @@ create_directories() {
     fi
 }
 
-# 下载数据库 (已适配不同工具)
+# 下载数据库
 download_database() {
     log_info "开始为 ${TOOL_NAME} 下载数据库..."
     
@@ -131,18 +130,25 @@ download_database() {
     log_info "压缩包位置: $(pwd)/$DB_ARCHIVE"
 }
 
-# 备份当前数据库 (已泛化)
+# 备份当前数据库
 backup_current_database() {
     if [[ -d "$DB_DIR" ]] && [[ -n "$(ls -A "$DB_DIR" 2>/dev/null)" ]]; then
         log_info "备份当前 ${TOOL_NAME} 数据库..."
         local backup_name="${TOOL_NAME,,}-db-backup-$(date +%Y%m%d-%H%M%S)"
+        local backup_path="$BACKUP_DIR/$backup_name"
+        
+        # 确保备份目录存在
+        mkdir -p "$BACKUP_DIR"
+        
         # 备份整个缓存目录以确保所有相关文件都被保存
-        cp -r "$CACHE_DIR" "$BACKUP_DIR/$backup_name"
-        log_success "数据库已备份到: $BACKUP_DIR/$backup_name"
+        cp -r "$CACHE_DIR" "$backup_path"
+        log_success "数据库已备份到: $backup_path"
+    else
+        log_info "没有找到现有的 ${TOOL_NAME} 数据库，跳过备份"
     fi
 }
 
-# 打包数据库 (已泛化)
+# 打包数据库
 package_database() {
     log_info "打包 ${TOOL_NAME} 数据库文件..."
     
@@ -165,7 +171,7 @@ package_database() {
     fi
 }
 
-# 更新数据库 (已泛化)
+# 更新数据库
 update_database() {
     log_info "开始更新 ${TOOL_NAME} 数据库..."
     
@@ -205,7 +211,7 @@ update_database() {
     fi
 }
 
-# 显示数据库状态 (已适配不同工具)
+# 显示数据库状态
 show_database_status() {
     log_info "${TOOL_NAME} 数据库状态:"
     
@@ -235,7 +241,7 @@ show_database_status() {
     fi
 }
 
-# 清理旧文件 (已泛化)
+# 清理旧文件
 clean_old_files() {
     log_info "清理 ${TOOL_NAME} 的旧文件..."
     
@@ -253,7 +259,7 @@ clean_old_files() {
     fi
 }
 
-# --- 主函数 (已重构) ---
+# --- 主函数 ---
 main() {
     TOOL_CHOICE="${1:-}"
     ACTION="${2:-}"
